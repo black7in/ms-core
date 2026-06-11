@@ -22,19 +22,19 @@ public class ChoferRestController {
     @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','CHOFER')")
     public ResponseEntity<Map<String, Object>> getChofer(@PathVariable String id) {
         var c = service.findById(id);
-        return ResponseEntity.ok(Map.of(
-                "id", c.getId(),
-                "ci", c.getCi(),
-                "nombre", c.getNombre(),
-                "telefono", c.getTelefono() != null ? c.getTelefono() : "",
-                "licenciaNumero", c.getLicenciaNumero(),
-                "licenciaCategoria", c.getLicenciaCategoria(),
-                "licenciaVence", c.getLicenciaVence(),
-                "estado", c.getEstado().name(),
-                "fotoPerfilS3Key", c.getFotoPerfilS3Key() != null ? c.getFotoPerfilS3Key() : "",
-                "fotoFacialS3Key", c.getFotoFacialS3Key() != null ? c.getFotoFacialS3Key() : "",
-                "fotoPerfilUrl", c.getFotoPerfilS3Key() != null ? storage.getDownloadUrl(c.getFotoPerfilS3Key()) : "",
-                "fotoFacialUrl", c.getFotoFacialS3Key() != null ? storage.getDownloadUrl(c.getFotoFacialS3Key()) : ""
-        ));
+        var result = new java.util.LinkedHashMap<String, Object>();
+        result.put("id", c.getId());
+        result.put("ci", c.getCi());
+        result.put("nombre", c.getNombre());
+        result.put("telefono", c.getTelefono() != null ? c.getTelefono() : "");
+        result.put("licenciaNumero", c.getLicenciaNumero());
+        result.put("licenciaCategoria", c.getLicenciaCategoria());
+        result.put("licenciaVence", c.getLicenciaVence());
+        result.put("estado", c.getEstado().name());
+        result.put("fotoPerfilS3Key", c.getFotoPerfilS3Key() != null ? c.getFotoPerfilS3Key() : "");
+        result.put("fotoFacialS3Key", c.getFotoFacialS3Key() != null ? c.getFotoFacialS3Key() : "");
+        result.put("fotoPerfilUrl", c.getFotoPerfilS3Key() != null ? storage.getDownloadUrl(c.getFotoPerfilS3Key()) : "");
+        result.put("fotoFacialUrl", c.getFotoFacialS3Key() != null ? storage.getDownloadUrl(c.getFotoFacialS3Key()) : "");
+        return ResponseEntity.ok(result);
     }
 }
