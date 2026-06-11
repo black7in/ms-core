@@ -92,14 +92,14 @@ public class ReportesController {
                     CASE WHEN EXISTS (
                         SELECT 1 FROM tarifas tf
                         WHERE tf.ruta_id = r.id AND tf.tipo_dia = 'FERIADO'
-                          AND tf.vigente_desde <= v.fecha::date
-                          AND (tf.vigente_hasta IS NULL OR tf.vigente_hasta >= v.fecha::date)
+                          AND tf.vigente_desde::date <= v.fecha::date
+                          AND (tf.vigente_hasta IS NULL OR tf.vigente_hasta::date >= v.fecha::date)
                     ) THEN 1 ELSE 0 END                                  AS es_feriado,
                     CASE WHEN EXISTS (
                         SELECT 1 FROM tarifas tf
                         WHERE tf.ruta_id = r.id AND tf.tipo_dia = 'TEMPORADA_ALTA'
-                          AND tf.vigente_desde <= v.fecha::date
-                          AND (tf.vigente_hasta IS NULL OR tf.vigente_hasta >= v.fecha::date)
+                          AND tf.vigente_desde::date <= v.fecha::date
+                          AND (tf.vigente_hasta IS NULL OR tf.vigente_hasta::date >= v.fecha::date)
                     ) THEN 1 ELSE 0 END                                  AS es_temporada_alta,
                     ROUND(
                         COUNT(av.id) FILTER (WHERE av.estado != 'LIBRE')::numeric /

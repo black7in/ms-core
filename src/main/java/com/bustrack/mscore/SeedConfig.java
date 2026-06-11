@@ -160,42 +160,25 @@ public class SeedConfig {
             }
             System.out.println("12 tarifas");
 
-            // ── Clientes ─────────────────────────────────────────────────────
-            String[][] clData = {
-                {"1100001","Juan Pérez",        "76543210","juan@email.com"},
-                {"1100002","María López",       "72123456",null},
-                {"1100003","Carlos Gutiérrez",  "78123456","carlos@email.com"},
-                {"1100004","Ana Mendoza",       "71890234","ana@email.com"},
-                {"1100005","Miguel Torres",     "73456789",null},
-                {"1100006","Sofía Reyes",       "74012345","sofia@email.com"},
-                {"1100007","Diego Vargas",      "75678901",null},
-                {"1100008","Valentina Cruz",    "76234567","valentina@email.com"},
-                {"1100009","Andrés Lima",       "77890123",null},
-                {"1100010","Isabella Rojas",    "78456789","isabella@email.com"},
-                {"1100011","Mateo Condori",     "79012345",null},
-                {"1100012","Lucía Mamani",      "70678901","lucia@email.com"},
-                {"1100013","Alejandro Quispe",  "71234568",null},
-                {"1100014","Emma Flores",       "72890124","emma@email.com"},
-                {"1100015","Sebastián Choque",  "73456790",null},
-                {"1100016","Mía Vargas",        "74012346","mia@email.com"},
-                {"1100017","Nicolás Gutierrez", "75678902",null},
-                {"1100018","Camila Torrez",     "76234568","camila@email.com"},
-                {"1100019","Gabriel Cárdenas",  "77890125",null},
-                {"1100020","Zoé Condori",       "78456791","zoe@email.com"},
-                {"1100021","Santiago Mamani",   "79012347",null},
-                {"1100022","Valeria Quispe",    "70678903","valeria@email.com"},
-                {"1100023","Tomás Flores",      "71234570",null},
-                {"1100024","Renata Choque",     "72890125","renata@email.com"},
-                {"1100025","Facundo Blanco",    "73456792",null},
-                {"1100026","Martina Ramos",     "74012347","martina@email.com"},
-                {"1100027","Bruno Salazar",     "75678903",null},
-                {"1100028","Emilia Vega",       "76234569","emilia@email.com"},
-                {"1100029","Thiago Morales",    "77890126",null},
-                {"1100030","Catalina Suárez",   "78456792","catalina@email.com"},
-            };
+            // ── Clientes (200) ───────────────────────────────────────────────
+            String[] nombres = {"Juan","María","Carlos","Ana","Miguel","Sofía","Diego","Valentina","Andrés","Isabella",
+                "Mateo","Lucía","Alejandro","Emma","Sebastián","Mía","Nicolás","Camila","Gabriel","Zoé",
+                "Santiago","Valeria","Tomás","Renata","Facundo","Martina","Bruno","Emilia","Thiago","Catalina",
+                "Felipe","Daniela","Rodrigo","Florencia","Javier","Antonella","Cristian","Natalia","Eduardo","Paola",
+                "Roberto","Claudia","Fernando","Patricia","Mario","Verónica","Sergio","Mónica","Hugo","Adriana"};
+            String[] apellidos = {"Pérez","López","Gutiérrez","Mendoza","Torres","Reyes","Vargas","Cruz","Lima","Rojas",
+                "Condori","Mamani","Quispe","Flores","Choque","Blanco","Ramos","Salazar","Vega","Morales",
+                "Suárez","García","Martínez","Fernández","Díaz","Romero","Sánchez","Ruiz","Herrera","Medina",
+                "Aguilar","Castro","Ortega","Delgado","Ramírez","Molina","Silva","Paredes","Espinoza","Fuentes"};
             var clientes = new ArrayList<Cliente>();
-            for (var d : clData)
-                clientes.add(clRepo.save(Cliente.builder().ci(d[0]).nombre(d[1]).telefono(d[2]).email(d[3]).build()));
+            for (int i = 0; i < 200; i++) {
+                String nom = nombres[i % nombres.length];
+                String ape = apellidos[(i / nombres.length + i) % apellidos.length];
+                String ci  = String.format("11%05d", i + 1);
+                String tel = String.format("7%07d", 6000000 + i);
+                String email = i % 3 == 0 ? (nom.toLowerCase().replaceAll("[áéíóú]","a") + i + "@email.com") : null;
+                clientes.add(clRepo.save(Cliente.builder().ci(ci).nombre(nom + " " + ape).telefono(tel).email(email).build()));
+            }
             System.out.println(clientes.size() + " clientes");
 
             // ── Viajes: Mayo 2026 (histórico) ────────────────────────────────

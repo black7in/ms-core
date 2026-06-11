@@ -25,13 +25,10 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @Transactional
@@ -104,22 +101,17 @@ public class BoletoService {
 
         var anio = LocalDateTime.now().getYear();
         var numFactura = "BTBO-" + anio + "-" + String.format("%06d", boletoRepo.count() + 1);
-        facturaRepo.save(Factura.builder().boleto(saved).numeroFactura(numFactura)
+        var factura = facturaRepo.save(Factura.builder().boleto(saved).numeroFactura(numFactura)
                 .nit(nit).razonSocial(razonSocial).nombreCliente(cliente.getNombre())
                 .monto(precio).build());
 
-        final String boletoId = saved.getId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                CompletableFuture.runAsync(() -> {
-                    try { procesarPostVenta(boletoId, nit, razonSocial); }
-                    catch (Exception ignored) {}
-                });
-            }
-        });
+        try {
+            procesarPostVenta(saved, factura);
+        } catch (Exception e) {
+            throw new RuntimeException("Error procesando venta: " + e.getMessage());
+        }
 
-        return saved;
+        return boletoRepo.findById(saved.getId()).orElse(saved);
     }
 
     public Boleto cancelarBoleto(String id) {
@@ -135,65 +127,55 @@ public class BoletoService {
         return boletoRepo.save(b);
     }
 
-    private void procesarPostVenta(String boletoId, String nit, String razonSocial) throws Exception {
-        var boleto = findById(boletoId);
-
+    private void procesarPostVenta(Boleto boleto, Factura factura) throws Exception {
         // 1. PDF del boleto → S3
         var boletoPdf = generarPdfBoleto(boleto);
-        var boletoS3Key = "boletos/" + boleto.getViaje().getId() + "/" + boletoId + ".pdf";
+        var boletoS3Key = "boletos/" + boleto.getViaje().getId() + "/" + boleto.getId() + ".pdf";
         storage.uploadFile(boletoS3Key, boletoPdf);
-        boletoRepo.findById(boletoId).ifPresent(b -> {
-            b.setPdfS3Key(boletoS3Key);
-            boletoRepo.save(b);
-        });
+        boleto.setPdfS3Key(boletoS3Key);
+        boletoRepo.save(boleto);
 
-        // 2. PDF de la factura → S3 → SHA256 → blockchain
-        var facturaOpt = facturaRepo.findByBoletoId(boletoId);
-        if (facturaOpt.isPresent()) {
-            var f = facturaOpt.get();
-            try {
-                var facturaPdf = generarPdfFactura(f, boleto);
-                var facturaS3Key = "facturas/" + f.getId() + ".pdf";
-                storage.uploadFile(facturaS3Key, facturaPdf);
-                f.setPdfS3Key(facturaS3Key);
+        // 2. Hash de datos de factura → blockchain → txHash → PDF con txHash → S3
+        var hashData = calcularHash((factura.getNumeroFactura() + factura.getMonto() + factura.getNombreCliente()).getBytes());
+        factura.setHashSha256(hashData);
+        var txHash = blockchain.registrarFactura(hashData, factura.getNumeroFactura(), factura.getMonto());
+        factura.setBlockchainTxHash(txHash);
+        factura.setBlockchainEstado(BlockchainEstado.CONFIRMADO);
 
-                var hash = calcularHash(facturaPdf);
-                f.setHashSha256(hash);
+        var facturaPdf = generarPdfFactura(factura, boleto, txHash);
+        var facturaS3Key = "facturas/" + factura.getId() + ".pdf";
+        storage.uploadFile(facturaS3Key, facturaPdf);
+        factura.setPdfS3Key(facturaS3Key);
+        facturaRepo.save(factura);
 
-                var txHash = blockchain.registrarFactura(hash, f.getNumeroFactura(), f.getMonto());
-                f.setBlockchainTxHash(txHash);
-                f.setBlockchainEstado(BlockchainEstado.CONFIRMADO);
-            } catch (Exception e) {
-                log.error("Error post-venta factura {}: {}", f.getNumeroFactura(), e.getMessage());
-                f.setBlockchainEstado(BlockchainEstado.FALLIDO);
-            }
-            facturaRepo.save(f);
-        }
-
-        // 3. Notificación WhatsApp
+        // 3. Notificación WhatsApp (async, no bloquea la respuesta)
         var cliente = boleto.getCliente();
         if (cliente.getTelefono() != null && !cliente.getTelefono().isEmpty()) {
-            var pdfUrl = storage.getDownloadUrl(boletoS3Key);
-            webhooks.notifyVenta(Map.of(
-                "pasajero", Map.of("nombre", cliente.getNombre(),
-                    "telefono", "591" + cliente.getTelefono().replaceAll("^\\+591|^\\+", "")),
-                "viaje", Map.of(
-                    "ruta", Map.of(
-                        "origen", boleto.getViaje().getHorario().getRuta().getOrigen().getCiudad(),
-                        "destino", boleto.getViaje().getHorario().getRuta().getDestino().getCiudad()),
-                    "fecha", boleto.getViaje().getFecha(),
-                    "horaSalida", boleto.getViaje().getHorario().getHoraSalida(),
-                    "carrilAsignado", boleto.getViaje().getCarrilAsignado() != null
-                            ? boleto.getViaje().getCarrilAsignado() : ""),
-                "boleto", Map.of(
-                    "numeroAsiento", String.valueOf(boleto.getAsiento().getNumeroAsiento()),
-                    "precioPagado", String.valueOf(boleto.getPrecioPagado()),
-                    "urlPdf", pdfUrl)
-            ));
+            final var pdfUrl = storage.getDownloadUrl(boletoS3Key);
+            Thread.ofVirtual().start(() -> {
+                try {
+                    webhooks.notifyVenta(Map.of(
+                        "pasajero", Map.of("nombre", cliente.getNombre(),
+                            "telefono", "591" + cliente.getTelefono().replaceAll("^\\+591|^\\+", "")),
+                        "viaje", Map.of(
+                            "ruta", Map.of(
+                                "origen", boleto.getViaje().getHorario().getRuta().getOrigen().getCiudad(),
+                                "destino", boleto.getViaje().getHorario().getRuta().getDestino().getCiudad()),
+                            "fecha", boleto.getViaje().getFecha(),
+                            "horaSalida", boleto.getViaje().getHorario().getHoraSalida(),
+                            "carrilAsignado", boleto.getViaje().getCarrilAsignado() != null
+                                    ? boleto.getViaje().getCarrilAsignado() : ""),
+                        "boleto", Map.of(
+                            "numeroAsiento", String.valueOf(boleto.getAsiento().getNumeroAsiento()),
+                            "precioPagado", String.valueOf(boleto.getPrecioPagado()),
+                            "urlPdf", pdfUrl)
+                    ));
+                } catch (Exception ignored) {}
+            });
         }
     }
 
-    private byte[] generarPdfFactura(Factura factura, Boleto boleto) throws Exception {
+    private byte[] generarPdfFactura(Factura factura, Boleto boleto, String txHash) throws Exception {
         var out = new ByteArrayOutputStream();
         var doc = new Document(new Rectangle(540, 300));
         PdfWriter.getInstance(doc, out);
@@ -220,6 +202,8 @@ public class BoletoService {
         doc.add(new Paragraph("Asiento: " + boleto.getAsiento().getNumeroAsiento(), normal));
         doc.add(new Paragraph(" ", normal));
         doc.add(new Paragraph("TOTAL: Bs. " + factura.getMonto(), bold));
+        doc.add(new Paragraph(" ", normal));
+        doc.add(new Paragraph("Blockchain TX: " + txHash, normal));
 
         doc.close();
         return out.toByteArray();
