@@ -42,7 +42,9 @@ public class ReportesController {
         }
 
         // Strip trailing semicolons before wrapping
-        String cleanSql = trimmed.replaceAll(";+$", "");
+        // Cast fecha to date so EXTRACT works (column is VARCHAR)
+        String cleanSql = trimmed.replaceAll(";+$", "")
+                .replaceAll("(?i)\\bfecha\\b(?!::)", "fecha::date");
         String safeSql = "SELECT * FROM (" + cleanSql + ") AS _q LIMIT 100";
 
         try {
