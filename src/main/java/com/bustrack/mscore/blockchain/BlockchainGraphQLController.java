@@ -16,7 +16,6 @@ public class BlockchainGraphQLController {
     }
 
     @QueryMapping
-    @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR','VENDEDOR')")
     public Map<String, Object> verificarFactura(@Argument String hash) {
         try {
             return blockchain.verificarFactura(hash);
