@@ -400,6 +400,19 @@ type Query {
     noShowsPorViaje(viajeId: ID!): Int!
 
     reporteInteligente(pregunta: String!): ReporteResponse!
+
+    verificarFactura(hash: String!): VerificacionFactura!
+}
+
+type VerificacionFactura {
+    existe: Boolean!
+    autentica: Boolean!
+    numeroFactura: String
+    monto: Float
+    txHash: String
+    blockNumber: Int
+    fechaRegistro: String
+    urlExplorador: String
 }
 
 type Mutation {

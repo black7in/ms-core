@@ -26,6 +26,33 @@ public class BlockchainService {
         this.msBlockchainUrl = msBlockchainUrl;
     }
 
+    public Map<String, Object> verificarFactura(String hash) throws Exception {
+        var attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = attrs != null ? attrs.getRequest().getHeader("Authorization") : null;
+
+        var reqBuilder = HttpRequest.newBuilder()
+                .uri(URI.create(msBlockchainUrl + "/blockchain/facturas/" + hash))
+                .header("Content-Type", "application/json")
+                .GET();
+        if (authHeader != null) reqBuilder.header("Authorization", authHeader);
+        var resp = HttpClient.newHttpClient().send(reqBuilder.build(), HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() >= 400)
+            throw new RuntimeException("Blockchain respondió " + resp.statusCode() + ": " + resp.body());
+
+        var root = objectMapper.readTree(resp.body());
+        var result = new java.util.LinkedHashMap<String, Object>();
+        result.put("existe",   root.path("existe").asBoolean());
+        result.put("autentica", root.path("autentica").asBoolean());
+        var reg = root.path("registro");
+        result.put("numeroFactura", reg.isMissingNode() ? null : reg.path("numeroFactura").asText(null));
+        result.put("monto",         reg.isMissingNode() ? null : reg.path("monto").asDouble());
+        result.put("txHash",        reg.isMissingNode() ? null : reg.path("txHash").asText(null));
+        result.put("blockNumber",   reg.isMissingNode() ? null : reg.path("blockNumber").asInt());
+        result.put("fechaRegistro", reg.isMissingNode() ? null : reg.path("fechaRegistro").asText(null));
+        result.put("urlExplorador", reg.isMissingNode() ? null : reg.path("urlExplorador").asText(null));
+        return result;
+    }
+
     public String registrarFactura(String hashSha256, String numeroFactura, BigDecimal monto) throws Exception {
         var body = objectMapper.writeValueAsString(Map.of(
                 "hashSha256", hashSha256,
