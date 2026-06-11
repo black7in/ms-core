@@ -1,6 +1,7 @@
 package com.bustrack.mscore.viajes;
 
 import com.bustrack.mscore.common.enums.EstadoAsiento;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ public class AsientoViaje {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "viaje_id", nullable = false)
     private Viaje viaje;
