@@ -38,7 +38,6 @@ type Bus {
     marca: String!
     modelo: String!
     anio: Int!
-    capacidad: Int!
     numeroCarriles: Int!
     estadoMecanico: EstadoBus!
     fotoUrl: String
@@ -225,7 +224,6 @@ input CrearBusInput {
     marca: String!
     modelo: String!
     anio: Int!
-    capacidad: Int!
     numeroCarriles: Int!
 }
 
@@ -234,7 +232,6 @@ input ActualizarBusInput {
     marca: String
     modelo: String
     anio: Int
-    capacidad: Int
     numeroCarriles: Int
     estadoMecanico: EstadoBus
 }

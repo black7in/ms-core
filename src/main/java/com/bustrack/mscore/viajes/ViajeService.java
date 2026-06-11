@@ -45,11 +45,9 @@ public class ViajeService {
         var duplicados = viajeRepo.findByHorarioIdAndFecha(horarioId, fecha);
         if (!duplicados.isEmpty()) throw new RuntimeException("Ya existe un viaje para ese horario y fecha");
 
-        int capacidad = 0;
         if (busId != null) {
             var bus = busRepo.findById(busId).orElseThrow(() -> new RuntimeException("Bus no encontrado"));
             if (bus.getEstadoMecanico() != EstadoBus.OPERATIVO) throw new RuntimeException("Bus no operativo");
-            capacidad = bus.getCapacidad();
         }
         if (choferId != null) {
             var c = choferRepo.findById(choferId).orElseThrow(() -> new RuntimeException("Chofer no encontrado"));
@@ -64,7 +62,7 @@ public class ViajeService {
 
         var saved = viajeRepo.save(viaje);
 
-        for (int i = 1; i <= capacidad; i++) {
+        for (int i = 1; i <= 44; i++) {
             asientoRepo.save(AsientoViaje.builder().viaje(saved).numeroAsiento(i).estado(EstadoAsiento.LIBRE).build());
         }
 
@@ -132,7 +130,10 @@ public class ViajeService {
             var existentes = viajeRepo.findByHorarioIdAndFecha(h.getId(), fecha);
             if (!existentes.isEmpty()) continue;
             var v = Viaje.builder().horario(h).fecha(fecha).estado(EstadoViaje.PROGRAMADO).build();
-            creados.add(viajeRepo.save(v));
+            var saved = viajeRepo.save(v);
+            for (int i = 1; i <= 44; i++)
+                asientoRepo.save(AsientoViaje.builder().viaje(saved).numeroAsiento(i).estado(EstadoAsiento.LIBRE).build());
+            creados.add(findById(saved.getId()));
         }
         return creados;
     }

@@ -34,7 +34,7 @@ public class BusController {
     public Bus crearBus(@Argument CrearBusInput input) {
         return service.create(Bus.builder()
                 .placa(input.placa()).marca(input.marca()).modelo(input.modelo())
-                .anio(input.anio()).capacidad(input.capacidad())
+                .anio(input.anio())
                 .numeroCarriles(input.numeroCarriles() != null ? input.numeroCarriles() : 2)
                 .build());
     }
@@ -44,7 +44,7 @@ public class BusController {
     public Bus actualizarBus(@Argument String id, @Argument ActualizarBusInput input) {
         return service.update(id, Bus.builder()
                 .placa(input.placa()).marca(input.marca()).modelo(input.modelo())
-                .anio(input.anio()).capacidad(input.capacidad())
+                .anio(input.anio())
                 .estadoMecanico(input.estadoMecanico())
                 .build());
     }
@@ -61,8 +61,8 @@ public class BusController {
     }
 
     public record CrearBusInput(String placa, String marca, String modelo, Integer anio,
-                                Integer capacidad, Integer numeroCarriles) {}
+                                Integer numeroCarriles) {}
 
     public record ActualizarBusInput(String placa, String marca, String modelo, Integer anio,
-                                     Integer capacidad, Integer numeroCarriles, EstadoBus estadoMecanico) {}
+                                     Integer numeroCarriles, EstadoBus estadoMecanico) {}
 }

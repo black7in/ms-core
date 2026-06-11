@@ -26,9 +26,6 @@ public class Bus {
     @Column(nullable = false)
     private Integer anio;
 
-    @Column(nullable = false)
-    private Integer capacidad;
-
     @Column(name = "numero_carriles", nullable = false)
     @Builder.Default
     private Integer numeroCarriles = 2;

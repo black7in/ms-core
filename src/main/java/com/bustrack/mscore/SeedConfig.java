@@ -77,21 +77,21 @@ public class SeedConfig {
 
             // ── Buses ────────────────────────────────────────────────────────
             String[][] bd = {
-                {"3421-ABC","Mercedes-Benz","O-500","2020","44"},
-                {"2897-XYZ","Scania","K-410","2021","48"},
-                {"4512-DEF","Volvo","B12R","2019","42"},
-                {"3788-GHI","Mercedes-Benz","O-500","2022","46"},
-                {"5901-MNO","Scania","K-360","2020","40"},
-                {"6234-PQR","Volvo","B9R","2021","44"},
-                {"7845-STU","Mercedes-Benz","O-400","2018","38"},
-                {"8123-VWX","Scania","K-440","2023","50"},
-                {"9234-YZA","Volvo","B11R","2022","46"},
-                {"1045-BCD","Mercedes-Benz","O-500RSD","2024","52"},
+                {"3421-ABC","Mercedes-Benz","O-500","2020"},
+                {"2897-XYZ","Scania","K-410","2021"},
+                {"4512-DEF","Volvo","B12R","2019"},
+                {"3788-GHI","Mercedes-Benz","O-500","2022"},
+                {"5901-MNO","Scania","K-360","2020"},
+                {"6234-PQR","Volvo","B9R","2021"},
+                {"7845-STU","Mercedes-Benz","O-400","2018"},
+                {"8123-VWX","Scania","K-440","2023"},
+                {"9234-YZA","Volvo","B11R","2022"},
+                {"1045-BCD","Mercedes-Benz","O-500RSD","2024"},
             };
             var buses = new ArrayList<Bus>();
             for (var d : bd)
                 buses.add(bRepo.save(Bus.builder().placa(d[0]).marca(d[1]).modelo(d[2])
-                        .anio(Integer.parseInt(d[3])).capacidad(Integer.parseInt(d[4])).build()));
+                        .anio(Integer.parseInt(d[3])).build()));
             System.out.println(buses.size() + " buses");
 
             // ── Choferes ─────────────────────────────────────────────────────
@@ -204,7 +204,7 @@ public class SeedConfig {
                     viajesCount++;
 
                     int numVendidos = 5 + rnd.nextInt(9); // 5-13
-                    int totalSeat   = 15;
+                    int totalSeat   = 44;
                     var asientoList = new ArrayList<AsientoViaje>(totalSeat);
                     for (int s = 1; s <= totalSeat; s++)
                         asientoList.add(AsientoViaje.builder().viaje(viaje).numeroAsiento(s)
