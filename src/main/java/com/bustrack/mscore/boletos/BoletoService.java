@@ -191,9 +191,9 @@ public class BoletoService {
 
         // QR de verificación en esquina superior derecha (posición absoluta, no afecta flujo de texto)
         String verifyUrl = frontendUrl + "/verificar?hash=" + hashSha256;
-        byte[] qrBytes = generarQrBytes(verifyUrl, 75);
+        byte[] qrBytes = generarQrBytes(verifyUrl, 150);
         Image qrImg = Image.getInstance(qrBytes);
-        qrImg.setAbsolutePosition(429, 289);
+        qrImg.setAbsolutePosition(354, 214);
         doc.add(qrImg);
 
         doc.add(new Paragraph("BusTrack BO — Factura", title));
