@@ -22,9 +22,9 @@ public class ReportesController {
 
     @PostMapping("/query")
     public ResponseEntity<?> query(@RequestBody Map<String, String> body) {
-        String sql = body.get("sql");
+        String sql = body.getOrDefault("sql", body.get("query"));
         if (sql == null || sql.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "El campo 'sql' es requerido"));
+            return ResponseEntity.badRequest().body(Map.of("error", "El campo 'sql' o 'query' es requerido"));
         }
 
         String trimmed = sql.strip();
