@@ -29,7 +29,6 @@ public class BusService {
         if (data.getMarca() != null) b.setMarca(data.getMarca());
         if (data.getModelo() != null) b.setModelo(data.getModelo());
         if (data.getAnio() != null) b.setAnio(data.getAnio());
-        if (data.getCapacidad() != null) b.setCapacidad(data.getCapacidad());
         if (data.getEstadoMecanico() != null) b.setEstadoMecanico(data.getEstadoMecanico());
         return repo.save(b);
     }
