@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: ms-core
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/bustrack_core}
+    username: ${SPRING_DATASOURCE_USERNAME:bustrack}
+    password: ${SPRING_DATASOURCE_PASSWORD:bustrack123}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  graphql:
+    path: /graphql
+    graphiql:
+      enabled: true
+
+server:
+  port: ${PORT:3000}
+
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:dev-jwt-secret-change-in-production}
+    access-expiration: ${APP_JWT_ACCESS_EXPIRATION:28800000}
+    refresh-secret: ${APP_JWT_REFRESH_SECRET:dev-refresh-secret-change-in-production}
+    refresh-expiration: ${APP_JWT_REFRESH_EXPIRATION:604800000}
+  mock:
+    external-services: ${APP_MOCK_EXTERNAL_SERVICES:true}
+  n8n:
+    webhook-venta-url: ${APP_N8N_WEBHOOK_VENTA_URL:http://localhost:5678/webhook/venta-boleto-whatsapp}
+    webhook-cancelacion-url: ${APP_N8N_WEBHOOK_CANCELACION_URL:http://localhost:5678/webhook/cancelacion-viaje}
+  ms-ia:
+    url: ${MS_IA_URL:http://localhost:8002}
+  ms-blockchain:
+    url: ${MS_BLOCKCHAIN_URL:http://localhost:8001}
+  expo:
+    access-token: ${EXPO_ACCESS_TOKEN:}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  access-key-id: ${AWS_ACCESS_KEY_ID:}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:}
+
+s3:
+  buckets:
+    boletos: ${S3_BUCKET_BOLETOS:bustrack-boletos}
+    facturas: ${S3_BUCKET_FACTURAS:bustrack-facturas}
+    licencias: ${S3_BUCKET_LICENCIAS:bustrack-licencias}
+    evidencias: ${S3_BUCKET_EVIDENCIAS:bustrack-evidencias}
+    buses: ${S3_BUCKET_BUSES:bustrack-buses}
+  url-expiration-seconds: ${S3_URL_EXPIRATION_SECONDS:600}

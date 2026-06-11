@@ -1,0 +1,10 @@
+.env
+target/
+*.class
+*.jar
+*.log
+.idea/
+*.iml
+tmp/
+.claude/
+CLAUDE.md

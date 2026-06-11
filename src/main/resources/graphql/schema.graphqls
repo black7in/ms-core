@@ -1,0 +1,448 @@
+enum Rol { ADMIN, VENDEDOR, SUPERVISOR, CHOFER }
+enum EstadoViaje { PROGRAMADO, EN_RUTA, FINALIZADO, CANCELADO }
+enum EstadoBoleto { VIGENTE, ABORDADO, NO_SHOW, CANCELADO }
+enum EstadoChofer { ACTIVO, INACTIVO, SUSPENDIDO }
+enum EstadoBus { OPERATIVO, EN_MANTENIMIENTO, FUERA_DE_SERVICIO }
+enum TipoDia { LUNES_JUEVES, VIERNES_DOMINGO, FERIADO, TEMPORADA_ALTA }
+enum BlockchainEstado { PENDIENTE, CONFIRMADO, FALLIDO }
+enum EstadoFactura { VIGENTE, ANULADA }
+enum EstadoAsiento { LIBRE, VENDIDO, ABORDADO }
+enum TipoArchivo { FOTO_CHOFER, FOTO_FACIAL, FOTO_BUS, LICENCIA }
+
+type AuthPayload {
+    token: String!
+    refreshToken: String
+    usuario: AuthUsuario!
+}
+
+type AuthUsuario {
+    id: ID!
+    nombre: String!
+    email: String!
+    rol: String!
+    terminalId: String
+}
+
+type Usuario {
+    id: ID!
+    nombre: String!
+    email: String!
+    rol: Rol!
+    activo: Boolean!
+    terminalId: String
+}
+
+type Bus {
+    id: ID!
+    placa: String!
+    marca: String!
+    modelo: String!
+    anio: Int!
+    capacidad: Int!
+    numeroCarriles: Int!
+    estadoMecanico: EstadoBus!
+    fotoUrl: String
+}
+
+type Chofer {
+    id: ID!
+    ci: String!
+    nombre: String!
+    telefono: String
+    licenciaNumero: String!
+    licenciaCategoria: String!
+    licenciaVence: String!
+    fotoPerfilUrl: String
+    fotoFacialUrl: String
+    estado: EstadoChofer!
+    usuario: Usuario
+}
+
+type Cliente {
+    id: ID!
+    ci: String!
+    nombre: String!
+    telefono: String
+    email: String
+}
+
+type Terminal {
+    id: ID!
+    nombre: String!
+    ciudad: String!
+    direccion: String
+}
+
+type Ruta {
+    id: ID!
+    origen: Terminal!
+    destino: Terminal!
+    distanciaKm: Float
+    duracionEstimadaMin: Int
+    activa: Boolean!
+}
+
+type Tarifa {
+    id: ID!
+    ruta: Ruta!
+    tipoDia: TipoDia!
+    precioBase: Float!
+    vigenteDesde: String!
+    vigenteHasta: String
+}
+
+type Horario {
+    id: ID!
+    ruta: Ruta!
+    horaSalida: String!
+    diasSemana: [Int!]!
+    activo: Boolean!
+}
+
+type AsientoViaje {
+    id: ID!
+    numeroAsiento: Int!
+    estado: EstadoAsiento!
+}
+
+type Viaje {
+    id: ID!
+    horario: Horario!
+    fecha: String!
+    bus: Bus
+    choferTitular: Chofer
+    choferAuxiliar: Chofer
+    carrilAsignado: String
+    estado: EstadoViaje!
+    horaSalidaReal: String
+    horaLlegadaReal: String
+    asientos: [AsientoViaje!]!
+    totalVendidos: Int!
+    totalLibres: Int!
+}
+
+type ViajesResult {
+    items: [Viaje!]!
+    total: Int!
+}
+
+type Boleto {
+    id: ID!
+    viaje: Viaje!
+    asiento: AsientoViaje!
+    cliente: Cliente!
+    vendedor: Usuario!
+    precioPagado: Float!
+    fechaVenta: String!
+    qrCode: String!
+    pdfUrl: String
+    estado: EstadoBoleto!
+    montoDevuelto: Float
+    fechaCancelacion: String
+    factura: Factura
+}
+
+type BoletosResult {
+    items: [Boleto!]!
+    total: Int!
+}
+
+type Factura {
+    id: ID!
+    boleto: Boleto
+    numeroFactura: String!
+    nit: String
+    razonSocial: String
+    nombreCliente: String!
+    monto: Float!
+    fecha: String!
+    pdfUrl: String
+    hashSha256: String
+    blockchainTxHash: String
+    blockchainEstado: BlockchainEstado!
+    estado: String!
+}
+
+type UrlSubida {
+    uploadUrl: String!
+    s3Key: String!
+}
+
+type ResumenVentas {
+    totalBoletos: Int!
+    totalIngresos: Float!
+    viajesHoy: Int!
+    ocupacionPromedio: Float!
+}
+
+type OcupacionDia {
+    fecha: String!
+    vendidos: Int!
+    capacidad: Int!
+    porcentaje: Float!
+}
+
+type IngresoRuta {
+    rutaId: String!
+    origen: String!
+    destino: String!
+    totalIngresos: Float!
+    totalBoletos: Int!
+}
+
+type IngresoDia {
+    fecha: String!
+    totalIngresos: Float!
+    totalBoletos: Int!
+}
+
+type ReporteResponse {
+    pregunta: String!
+    explicacion: String!
+    columnas: [String!]!
+    filas: [[String]]!
+    totalFilas: Int!
+    error: String
+}
+
+input CrearUsuarioInput {
+    nombre: String!
+    email: String!
+    password: String!
+    rol: Rol!
+}
+
+input ActualizarUsuarioInput {
+    nombre: String
+    email: String
+    password: String
+    rol: Rol
+}
+
+input CrearBusInput {
+    placa: String!
+    marca: String!
+    modelo: String!
+    anio: Int!
+    capacidad: Int!
+    numeroCarriles: Int!
+}
+
+input ActualizarBusInput {
+    placa: String
+    marca: String
+    modelo: String
+    anio: Int
+    capacidad: Int
+    numeroCarriles: Int
+    estadoMecanico: EstadoBus
+}
+
+input CrearChoferInput {
+    ci: String!
+    nombre: String!
+    telefono: String
+    licenciaNumero: String!
+    licenciaCategoria: String!
+    licenciaVence: String!
+    crearUsuario: Boolean
+    emailUsuario: String
+    passwordUsuario: String
+}
+
+input ActualizarChoferInput {
+    ci: String
+    nombre: String
+    telefono: String
+    licenciaNumero: String
+    licenciaCategoria: String
+    licenciaVence: String
+}
+
+input CrearClienteInput {
+    ci: String!
+    nombre: String!
+    telefono: String
+    email: String
+}
+
+input ActualizarClienteInput {
+    ci: String
+    nombre: String
+    telefono: String
+    email: String
+}
+
+input CrearTerminalInput {
+    nombre: String!
+    ciudad: String!
+    direccion: String
+}
+
+input ActualizarTerminalInput {
+    nombre: String
+    ciudad: String
+    direccion: String
+}
+
+input CrearRutaInput {
+    terminalOrigenId: String!
+    terminalDestinoId: String!
+    distanciaKm: Float
+    duracionEstimadaMin: Int
+}
+
+input ActualizarRutaInput {
+    terminalOrigenId: String
+    terminalDestinoId: String
+    distanciaKm: Float
+    duracionEstimadaMin: Int
+    activa: Boolean
+}
+
+input CrearHorarioInput {
+    rutaId: String!
+    horaSalida: String!
+    diasSemana: [Int!]!
+}
+
+input ActualizarHorarioInput {
+    rutaId: String
+    horaSalida: String
+    diasSemana: [Int!]
+    activo: Boolean
+}
+
+input CrearViajeInput {
+    horarioId: String!
+    fecha: String!
+    busId: String
+    choferTitularId: String
+    choferAuxiliarId: String
+    carrilAsignado: String
+}
+
+input ActualizarViajeInput {
+    horarioId: String
+    fecha: String
+    busId: String
+    choferTitularId: String
+    choferAuxiliarId: String
+    carrilAsignado: String
+}
+
+input CrearTarifaInput {
+    rutaId: String!
+    tipoDia: TipoDia!
+    precioBase: Float!
+    vigenteDesde: String!
+    vigenteHasta: String
+}
+
+input ActualizarTarifaInput {
+    rutaId: String
+    tipoDia: TipoDia
+    precioBase: Float
+    vigenteDesde: String
+    vigenteHasta: String
+}
+
+input VenderBoletoInput {
+    viajeId: String!
+    asientoId: String!
+    clienteId: String!
+    precioVenta: Float
+    nit: String
+    razonSocial: String
+}
+
+type Query {
+    me: Usuario!
+
+    usuarios: [Usuario!]!
+    usuario(id: ID!): Usuario!
+
+    buses(estado: EstadoBus): [Bus!]!
+    bus(id: ID!): Bus!
+
+    choferes(estado: EstadoChofer): [Chofer!]!
+    chofer(id: ID!): Chofer!
+
+    clientes(busqueda: String): [Cliente!]!
+    cliente(id: ID!): Cliente!
+    clientePorCi(ci: String!): Cliente
+
+    terminales: [Terminal!]!
+    terminal(id: ID!): Terminal!
+
+    tarifas(rutaId: ID!): [Tarifa!]!
+    tarifaActual(rutaId: ID!, fecha: String!): Tarifa!
+
+    rutas(activa: Boolean): [Ruta!]!
+    ruta(id: ID!): Ruta!
+
+    horarios(rutaId: ID, activo: Boolean): [Horario!]!
+
+    viajes(rutaId: ID, fecha: String, estado: EstadoViaje, page: Int, limit: Int): ViajesResult!
+    viaje(id: ID!): Viaje!
+    viajesDisponibles(rutaId: ID!, fecha: String!): [Viaje!]!
+    viajesPorChofer(choferId: ID!): [Viaje!]!
+
+    boletos(viajeId: ID, clienteId: ID, estado: EstadoBoleto, page: Int, limit: Int): BoletosResult!
+    boleto(id: ID!): Boleto!
+
+    facturas(page: Int, limit: Int): [Factura!]!
+    factura(id: ID!): Factura!
+    facturaPorBoleto(boletoId: ID!): Factura
+
+    resumenVentas(fechaInicio: String!, fechaFin: String!): ResumenVentas!
+    ocupacionPorRuta(rutaId: ID!, fechaInicio: String!, fechaFin: String!): [OcupacionDia!]!
+    ingresosPorRuta(fechaInicio: String!, fechaFin: String!): [IngresoRuta!]!
+    ingresosPorDia(fechaInicio: String!, fechaFin: String!): [IngresoDia!]!
+    noShowsPorViaje(viajeId: ID!): Int!
+
+    reporteInteligente(pregunta: String!): ReporteResponse!
+}
+
+type Mutation {
+    login(email: String!, password: String!): AuthPayload!
+
+    crearUsuario(input: CrearUsuarioInput!): Usuario!
+    actualizarUsuario(id: ID!, input: ActualizarUsuarioInput!): Usuario!
+    desactivarUsuario(id: ID!): Usuario!
+
+    crearBus(input: CrearBusInput!): Bus!
+    actualizarBus(id: ID!, input: ActualizarBusInput!): Bus!
+    cambiarEstadoBus(id: ID!, estado: EstadoBus!): Bus!
+
+    crearChofer(input: CrearChoferInput!): Chofer!
+    actualizarChofer(id: ID!, input: ActualizarChoferInput!): Chofer!
+    cambiarEstadoChofer(id: ID!, estado: EstadoChofer!): Chofer!
+
+    crearCliente(input: CrearClienteInput!): Cliente!
+    actualizarCliente(id: ID!, input: ActualizarClienteInput!): Cliente!
+
+    crearTerminal(input: CrearTerminalInput!): Terminal!
+    actualizarTerminal(id: ID!, input: ActualizarTerminalInput!): Terminal!
+
+    crearTarifa(input: CrearTarifaInput!): Tarifa!
+    actualizarTarifa(id: ID!, input: ActualizarTarifaInput!): Tarifa!
+
+    crearRuta(input: CrearRutaInput!): Ruta!
+    actualizarRuta(id: ID!, input: ActualizarRutaInput!): Ruta!
+
+    crearHorario(input: CrearHorarioInput!): Horario!
+    actualizarHorario(id: ID!, input: ActualizarHorarioInput!): Horario!
+
+    generarViajesDelDia(fecha: String!): [Viaje!]!
+    crearViaje(input: CrearViajeInput!): Viaje!
+    actualizarViaje(id: ID!, input: ActualizarViajeInput!): Viaje!
+    cancelarViaje(id: ID!): Viaje!
+    iniciarViaje(id: ID!): Viaje!
+    finalizarViaje(id: ID!): Viaje!
+
+    venderBoleto(input: VenderBoletoInput!): Boleto!
+    cancelarBoleto(id: ID!): Boleto!
+
+    generarUrlSubida(tipo: TipoArchivo!, entidadId: ID!, extension: String): UrlSubida!
+}

@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: bustrack-postgres
+    environment:
+      POSTGRES_DB: bustrack_core
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d bustrack_core"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ms-core:
+    build: .
+    container_name: bustrack-ms-core
+    ports:
+      - "${PORT}:${PORT}"
+    environment:
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      APP_JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      APP_JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      APP_MOCK_EXTERNAL_SERVICES: ${MOCK_EXTERNAL_SERVICES}
+      APP_N8N_WEBHOOK_VENTA_URL: ${N8N_WEBHOOK_VENTA_URL}
+      APP_N8N_WEBHOOK_CANCELACION_URL: ${N8N_WEBHOOK_CANCELACION_URL}
+      MS_IA_URL: ${MS_IA_URL}
+      MS_BLOCKCHAIN_URL: ${MS_BLOCKCHAIN_URL}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN}
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      S3_BUCKET_BOLETOS: ${S3_BUCKET_BOLETOS}
+      S3_BUCKET_FACTURAS: ${S3_BUCKET_FACTURAS}
+      S3_BUCKET_LICENCIAS: ${S3_BUCKET_LICENCIAS}
+      S3_BUCKET_EVIDENCIAS: ${S3_BUCKET_EVIDENCIAS}
+      S3_BUCKET_BUSES: ${S3_BUCKET_BUSES}
+      S3_URL_EXPIRATION_SECONDS: ${S3_URL_EXPIRATION_SECONDS}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: rebuild
+          path: ./src
+        - action: rebuild
+          path: ./pom.xml
+
+volumes:
+  pgdata:
