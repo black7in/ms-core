@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -29,14 +31,22 @@ public class MsIaGraphQLController {
     @QueryMapping
     public ReporteResponse reporteInteligente(@Argument String pregunta) {
         try {
+            var attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            var authHeader = attrs != null ? attrs.getRequest().getHeader("Authorization") : null;
+
             var body = objectMapper.writeValueAsString(Map.of("pregunta", pregunta));
-            var req = HttpRequest.newBuilder()
+            var reqBuilder = HttpRequest.newBuilder()
                     .uri(URI.create(msIaUrl + "/agente/reporte"))
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
-                    .build();
-            var resp = HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofString());
-            return objectMapper.readValue(resp.body(), ReporteResponse.class);
+                    .header("Content-Type", "application/json");
+            if (authHeader != null) reqBuilder.header("Authorization", authHeader);
+            var resp = HttpClient.newHttpClient().send(reqBuilder.POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+                    HttpResponse.BodyHandlers.ofString());
+
+            var result = objectMapper.readValue(resp.body(), ReporteResponse.class);
+            if (result.pregunta() == null)
+                return new ReporteResponse(pregunta, "", List.of(), List.of(), 0,
+                        objectMapper.readTree(resp.body()).path("error").asText("Error desconocido de MS-IA"));
+            return result;
         } catch (Exception e) {
             log.error("MS-IA proxy error: {}", e.getMessage());
             return new ReporteResponse(pregunta, "", List.of(), List.of(), 0, e.getMessage());
