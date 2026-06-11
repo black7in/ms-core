@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -30,11 +32,14 @@ public class BlockchainService {
                 "numeroFactura", numeroFactura,
                 "monto", monto
         ));
-        var req = HttpRequest.newBuilder()
+        var attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        var authHeader = attrs != null ? attrs.getRequest().getHeader("Authorization") : null;
+
+        var reqBuilder = HttpRequest.newBuilder()
                 .uri(URI.create(msBlockchainUrl + "/blockchain/facturas"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+                .header("Content-Type", "application/json");
+        if (authHeader != null) reqBuilder.header("Authorization", authHeader);
+        var req = reqBuilder.POST(HttpRequest.BodyPublishers.ofString(body)).build();
         var resp = HttpClient.newHttpClient().send(req, HttpResponse.BodyHandlers.ofString());
         if (resp.statusCode() >= 400)
             throw new RuntimeException("Blockchain respondió " + resp.statusCode() + ": " + resp.body());
