@@ -180,13 +180,14 @@ public class BoletoService {
 
     private byte[] generarPdfFactura(Factura factura, Boleto boleto, String txHash, String hashSha256) throws Exception {
         var out = new ByteArrayOutputStream();
-        var doc = new Document(new Rectangle(540, 300));
+        var doc = new Document(new Rectangle(540, 400));
         PdfWriter.getInstance(doc, out);
         doc.open();
 
         Font title = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Font bold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
         Font normal = FontFactory.getFont(FontFactory.HELVETICA, 10);
+        Font small = FontFactory.getFont(FontFactory.HELVETICA, 8);
 
         doc.add(new Paragraph("BusTrack BO — Factura", title));
         doc.add(new Paragraph("Nro: " + factura.getNumeroFactura(), bold));
@@ -207,8 +208,7 @@ public class BoletoService {
         doc.add(new Paragraph("TOTAL: Bs. " + factura.getMonto(), bold));
         doc.add(new Paragraph(" ", normal));
         doc.add(new Paragraph("Blockchain TX: " + txHash, normal));
-        doc.add(new Paragraph("Verificar autenticidad:", normal));
-        doc.add(new Paragraph(frontendUrl + "/verificar?hash=" + hashSha256, normal));
+        doc.add(new Paragraph("Verificar autenticidad: " + frontendUrl + "/verificar?hash=" + hashSha256, small));
 
         doc.close();
         return out.toByteArray();
