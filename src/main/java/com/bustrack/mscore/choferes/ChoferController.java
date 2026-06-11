@@ -1,6 +1,7 @@
 package com.bustrack.mscore.choferes;
 
 import com.bustrack.mscore.common.enums.EstadoChofer;
+import com.bustrack.mscore.common.enums.TipoArchivo;
 import com.bustrack.mscore.storage.StorageService;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -53,6 +54,12 @@ public class ChoferController {
     @PreAuthorize("hasRole('ADMIN')")
     public Chofer cambiarEstadoChofer(@Argument String id, @Argument EstadoChofer estado) {
         return service.cambiarEstado(id, estado);
+    }
+
+    @MutationMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public Chofer guardarFotoChofer(@Argument String id, @Argument String s3Key, @Argument TipoArchivo tipo) {
+        return service.guardarFoto(id, s3Key, tipo);
     }
 
     @SchemaMapping(typeName = "Chofer", field = "fotoPerfilUrl")

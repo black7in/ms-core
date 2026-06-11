@@ -2,6 +2,7 @@ package com.bustrack.mscore.choferes;
 
 import com.bustrack.mscore.common.enums.EstadoChofer;
 import com.bustrack.mscore.common.enums.Rol;
+import com.bustrack.mscore.common.enums.TipoArchivo;
 import com.bustrack.mscore.usuarios.Usuario;
 import com.bustrack.mscore.usuarios.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,6 +58,13 @@ public class ChoferService {
     public Chofer cambiarEstado(String id, EstadoChofer estado) {
         var c = findById(id);
         c.setEstado(estado);
+        return repo.save(c);
+    }
+
+    public Chofer guardarFoto(String id, String s3Key, TipoArchivo tipo) {
+        var c = findById(id);
+        if (tipo == TipoArchivo.FOTO_FACIAL) c.setFotoFacialS3Key(s3Key);
+        else c.setFotoPerfilS3Key(s3Key);
         return repo.save(c);
     }
 }

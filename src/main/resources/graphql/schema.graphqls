@@ -429,6 +429,7 @@ type Mutation {
     crearChofer(input: CrearChoferInput!): Chofer!
     actualizarChofer(id: ID!, input: ActualizarChoferInput!): Chofer!
     cambiarEstadoChofer(id: ID!, estado: EstadoChofer!): Chofer!
+    guardarFotoChofer(id: ID!, s3Key: String!, tipo: TipoArchivo!): Chofer!
 
     crearCliente(input: CrearClienteInput!): Cliente!
     actualizarCliente(id: ID!, input: ActualizarClienteInput!): Cliente!
