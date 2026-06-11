@@ -187,7 +187,14 @@ public class BoletoService {
         Font title = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Font bold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
         Font normal = FontFactory.getFont(FontFactory.HELVETICA, 10);
-        Font small = FontFactory.getFont(FontFactory.HELVETICA, 8);
+        Font small = FontFactory.getFont(FontFactory.HELVETICA, 7);
+
+        // QR de verificación en esquina superior derecha (posición absoluta, no afecta flujo de texto)
+        String verifyUrl = frontendUrl + "/verificar?hash=" + hashSha256;
+        byte[] qrBytes = generarQrBytes(verifyUrl, 75);
+        Image qrImg = Image.getInstance(qrBytes);
+        qrImg.setAbsolutePosition(429, 289);
+        doc.add(qrImg);
 
         doc.add(new Paragraph("BusTrack BO — Factura", title));
         doc.add(new Paragraph("Nro: " + factura.getNumeroFactura(), bold));
@@ -208,7 +215,7 @@ public class BoletoService {
         doc.add(new Paragraph("TOTAL: Bs. " + factura.getMonto(), bold));
         doc.add(new Paragraph(" ", normal));
         doc.add(new Paragraph("Blockchain TX: " + txHash, normal));
-        doc.add(new Paragraph("Verificar autenticidad: " + frontendUrl + "/verificar?hash=" + hashSha256, small));
+        doc.add(new Paragraph("Escanear QR para verificar autenticidad en blockchain", small));
 
         doc.close();
         return out.toByteArray();
