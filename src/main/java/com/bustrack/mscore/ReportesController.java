@@ -89,26 +89,22 @@ public class ReportesController {
                     EXTRACT(DOW   FROM v.fecha::date)::int              AS dia_semana,
                     EXTRACT(MONTH FROM v.fecha::date)::int              AS mes,
                     EXTRACT(WEEK  FROM v.fecha::date)::int              AS semana_del_anio,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM tarifas tf
-                        WHERE tf.ruta_id = r.id AND tf.tipo_dia = 'FERIADO'
-                          AND tf.vigente_desde::date <= v.fecha::date
-                          AND (tf.vigente_hasta IS NULL OR tf.vigente_hasta::date >= v.fecha::date)
-                    ) THEN 1 ELSE 0 END                                  AS es_feriado,
-                    CASE WHEN EXISTS (
-                        SELECT 1 FROM tarifas tf
-                        WHERE tf.ruta_id = r.id AND tf.tipo_dia = 'TEMPORADA_ALTA'
-                          AND tf.vigente_desde::date <= v.fecha::date
-                          AND (tf.vigente_hasta IS NULL OR tf.vigente_hasta::date >= v.fecha::date)
-                    ) THEN 1 ELSE 0 END                                  AS es_temporada_alta,
+                    MAX(CASE WHEN tf_f.id IS NOT NULL THEN 1 ELSE 0 END) AS es_feriado,
+                    MAX(CASE WHEN tf_t.id IS NOT NULL THEN 1 ELSE 0 END) AS es_temporada_alta,
                     ROUND(
                         COUNT(av.id) FILTER (WHERE av.estado != 'LIBRE')::numeric /
                         NULLIF(COUNT(av.id), 0), 4
                     )                                                    AS ocupacion
                 FROM viajes v
-                JOIN horarios h       ON v.horario_id = h.id
-                JOIN rutas r          ON h.ruta_id    = r.id
+                JOIN horarios h        ON v.horario_id = h.id
+                JOIN rutas r           ON h.ruta_id    = r.id
                 JOIN asientos_viaje av ON av.viaje_id  = v.id
+                LEFT JOIN tarifas tf_f ON tf_f.ruta_id = r.id AND tf_f.tipo_dia = 'FERIADO'
+                    AND tf_f.vigente_desde::date <= v.fecha::date
+                    AND (tf_f.vigente_hasta IS NULL OR tf_f.vigente_hasta::date >= v.fecha::date)
+                LEFT JOIN tarifas tf_t ON tf_t.ruta_id = r.id AND tf_t.tipo_dia = 'TEMPORADA_ALTA'
+                    AND tf_t.vigente_desde::date <= v.fecha::date
+                    AND (tf_t.vigente_hasta IS NULL OR tf_t.vigente_hasta::date >= v.fecha::date)
                 WHERE v.estado IN ('FINALIZADO', 'EN_RUTA')
                 GROUP BY v.fecha::date, r.id
             )
