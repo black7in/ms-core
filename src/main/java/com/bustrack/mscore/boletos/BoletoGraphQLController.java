@@ -10,6 +10,7 @@ import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.data.domain.PageRequest;
 import java.util.*;
 
 @Controller
@@ -28,13 +29,9 @@ public class BoletoGraphQLController {
     @QueryMapping @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR','SUPERVISOR')")
     public Map<String, Object> boletos(@Argument String viajeId, @Argument String clienteId,
             @Argument EstadoBoleto estado, @Argument Integer page, @Argument Integer limit) {
-        var all = repo.findAll();
-        if (viajeId != null) all = all.stream().filter(b -> b.getViaje().getId().equals(viajeId)).toList();
-        if (clienteId != null) all = all.stream().filter(b -> b.getCliente().getId().equals(clienteId)).toList();
-        if (estado != null) all = all.stream().filter(b -> b.getEstado() == estado).toList();
         int p = page != null ? page : 1, l = limit != null ? limit : 20;
-        var items = all.stream().skip((p - 1) * l).limit(l).toList();
-        return Map.of("items", items, "total", all.size());
+        var resultado = repo.findFiltered(viajeId, clienteId, estado, PageRequest.of(p - 1, l));
+        return Map.of("items", resultado.getContent(), "total", resultado.getTotalElements());
     }
 
     @QueryMapping @PreAuthorize("hasAnyRole('ADMIN','VENDEDOR','SUPERVISOR')")
