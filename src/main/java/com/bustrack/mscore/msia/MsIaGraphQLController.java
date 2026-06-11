@@ -44,12 +44,12 @@ public class MsIaGraphQLController {
 
             var result = objectMapper.readValue(resp.body(), ReporteResponse.class);
             if (result.pregunta() == null)
-                return new ReporteResponse(pregunta, "", List.of(), List.of(), 0,
+                return new ReporteResponse(pregunta, "", null, List.of(), List.of(), 0,
                         objectMapper.readTree(resp.body()).path("error").asText("Error desconocido de MS-IA"));
             return result;
         } catch (Exception e) {
             log.error("MS-IA proxy error: {}", e.getMessage());
-            return new ReporteResponse(pregunta, "", List.of(), List.of(), 0, e.getMessage());
+            return new ReporteResponse(pregunta, "", null, List.of(), List.of(), 0, e.getMessage());
         }
     }
 }

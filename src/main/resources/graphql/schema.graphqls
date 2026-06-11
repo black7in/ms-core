@@ -199,6 +199,7 @@ type IngresoDia {
 type ReporteResponse {
     pregunta: String!
     explicacion: String!
+    sqlGenerado: String
     columnas: [String!]!
     filas: [[String]]!
     totalFilas: Int!

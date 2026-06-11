@@ -7,6 +7,7 @@ import java.util.List;
 public record ReporteResponse(
         String pregunta,
         String explicacion,
+        String sqlGenerado,
         List<String> columnas,
         List<List<String>> filas,
         int totalFilas,
