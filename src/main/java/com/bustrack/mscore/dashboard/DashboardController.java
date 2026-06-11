@@ -32,17 +32,19 @@ public class DashboardController {
     @QueryMapping @PreAuthorize("hasAnyRole('ADMIN','SUPERVISOR')")
     public List<Map<String, Object>> ocupacionPorRuta(@Argument String rutaId,
             @Argument String fechaInicio, @Argument String fechaFin) {
-        var q = "SELECT v.fecha, COUNT(a.id) FROM Viaje v " +
+        var q = "SELECT v.fecha, COUNT(a.id), COUNT(DISTINCT v.id) FROM Viaje v " +
                 "JOIN v.asientos a " +
                 "WHERE v.horario.ruta.id = :rutaId AND v.fecha BETWEEN :i AND :f AND a.estado != 'LIBRE' " +
                 "GROUP BY v.fecha ORDER BY v.fecha";
         return em.createQuery(q, Object[].class)
                 .setParameter("rutaId", rutaId).setParameter("i", fechaInicio).setParameter("f", fechaFin)
                 .getResultList().stream().map(o -> {
-            int vendidos = ((Number)o[1]).intValue();
+            int vendidos  = ((Number)o[1]).intValue();
+            int nViajes   = ((Number)o[2]).intValue();
+            int capacidad = 44 * nViajes;
             return Map.<String,Object>of("fecha", o[0].toString(), "vendidos", vendidos,
-                    "capacidad", 44, "porcentaje",
-                    Math.round((double)vendidos / 44 * 10000) / 100.0);
+                    "capacidad", capacidad, "porcentaje",
+                    Math.round((double)vendidos / capacidad * 10000) / 100.0);
         }).toList();
     }
 
