@@ -92,7 +92,7 @@ public class BoletoService {
 
         var vendedor = usuarioRepo.findById(vendedorId).orElseThrow();
         var cliente = clienteRepo.findById(clienteId).orElseThrow();
-        var precio = precioVenta != null
+        var precio = (precioVenta != null && precioVenta > 0)
                 ? java.math.BigDecimal.valueOf(precioVenta)
                 : tarifa.getPrecioBase();
         var boleto = Boleto.builder().viaje(viaje).asiento(asiento).cliente(cliente)
